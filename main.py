@@ -16,7 +16,8 @@ salesforce = Salesforce(
 
 def create_accounts(count):
     data = [{"Name": f"Account - {x}"} for x in range(count)]
-    return salesforce.bulk.Account.insert(data, batch_size=1000, use_serial=True)
+    result = salesforce.bulk.Account.insert(data, batch_size=1000, use_serial=True)
+    return [x for x in result if x["success"]]
 
 
 def create_opportunities(account, count):
