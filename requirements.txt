@@ -1,0 +1,3 @@
+environs==9.3.5
+ipython==7.30.1
+simple-salesforce==1.11.4
