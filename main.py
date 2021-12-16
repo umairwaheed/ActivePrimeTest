@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import random
 import csv
+import random
 from collections import defaultdict
 
 from environs import Env
@@ -59,12 +59,41 @@ def create_report(accounts):
     return accounts_revenue
 
 
-def create_csv(report_data):
-    with open('result.csv', 'w') as writer:
-        csv_writer = csv.writer(writer, delimiter=',')
-        csv_writer.writerow(['ID', 'Name', 'Revenue'])
+def create_report_with_sql(accounts):
+    ids = [x["id"] for x in accounts]
+    query = format_soql(
+        "select Id, Name from Account where id in {ids}",
+        ids=ids,
+    )
+    account_data = salesforce.bulk.Account.query(query, lazy_operation=True)
+
+    accounts_revenue = defaultdict(lambda: {"Name": "", "Revenue": 0})
+    for batch in account_data:
+        for account in batch:
+            accounts_revenue[account["Id"]]["Name"] = account["Name"]
+
+    rows = salesforce.query_all_iter(
+        format_soql(
+            "select AccountId, sum(Amount)Amount from Opportunity where "
+            "AccountId in {ids} group by AccountId",
+            ids=ids,
+        )
+    )
+
+    for row in rows:
+        accounts_revenue[row["AccountId"]]["Revenue"] = row["Amount"]
+
+    return accounts_revenue
+
+
+def create_csv(report_data, output_file):
+    with open(output_file, "w") as writer:
+        csv_writer = csv.writer(writer, delimiter=",")
+        csv_writer.writerow(["ID", "Name", "Revenue"])
         for key in report_data:
-            csv_writer.writerow([key, report_data[key]['Name'], report_data[key]['Revenue']])
+            csv_writer.writerow(
+                [key, report_data[key]["Name"], report_data[key]["Revenue"]]
+            )
 
 
 def main():
@@ -73,7 +102,10 @@ def main():
         create_opportunities(account, 2)
 
     report_data = create_report(accounts)
-    create_csv(report_data)
+    create_csv(report_data, "manual.csv")
+
+    report_data = create_report_with_sql(accounts)
+    create_csv(report_data, "auto.csv")
 
 
 if __name__ == "__main__":
