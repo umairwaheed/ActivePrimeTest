@@ -46,15 +46,13 @@ def get_report_data(accounts):
         for account in batch:
             accounts_revenue[account["Id"]]["Name"] = account["Name"]
 
-    rows = salesforce.query_all_iter(
+    for row in salesforce.query_all_iter(
         format_soql(
             "select AccountId, sum(Amount)Amount from Opportunity where "
             "AccountId in {ids} group by AccountId",
             ids=ids,
         )
-    )
-
-    for row in rows:
+    ):
         accounts_revenue[row["AccountId"]]["Revenue"] = row["Amount"]
 
     return accounts_revenue
