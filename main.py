@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import random
+import csv
 from collections import defaultdict
 
 from environs import Env
@@ -53,18 +54,26 @@ def create_report(accounts):
 
     for batch in fetch_results:
         for record in batch:
-            accounts_revenue[batch["AccountId"]]["Revenue"] += record["Amount"]
+            accounts_revenue[record["AccountId"]]["Revenue"] += record["Amount"]
 
     return accounts_revenue
 
 
+def create_csv(report_data):
+    with open('result.csv', 'w') as writer:
+        csv_writer = csv.writer(writer, delimiter=',')
+        csv_writer.writerow(['ID', 'Name', 'Revenue'])
+        for key in report_data:
+            csv_writer.writerow([key, report_data[key]['Name'], report_data[key]['Revenue']])
+
+
 def main():
-    accounts = create_accounts(1)
+    accounts = create_accounts(5)
     for account in accounts:
-        create_opportunities(account, 1)
+        create_opportunities(account, 2)
 
     report_data = create_report(accounts)
-    print(report_data)
+    create_csv(report_data)
 
 
 if __name__ == "__main__":
