@@ -72,7 +72,7 @@ def create_csv(report_data, output_file):
 
 
 def main():
-    accounts = create_accounts(random.randint(10, 11))
+    accounts = create_accounts(random.randint(10, 100))
     for account in accounts:
         create_opportunities(account, random.randint(0, 5))
 
