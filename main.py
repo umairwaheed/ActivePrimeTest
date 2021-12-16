@@ -33,33 +33,7 @@ def create_opportunities(account, count):
     return salesforce.bulk.Opportunity.insert(data, batch_size=1000, use_serial=True)
 
 
-def create_report(accounts):
-    ids = [x["id"] for x in accounts]
-    query = format_soql(
-        "select Id, Name from Account where id in {ids}",
-        ids=ids,
-    )
-    account_data = salesforce.bulk.Account.query(query, lazy_operation=True)
-
-    accounts_revenue = defaultdict(lambda: {"Name": "", "Revenue": 0})
-    for batch in account_data:
-        for account in batch:
-            accounts_revenue[account["Id"]]["Name"] = account["Name"]
-
-    query = format_soql(
-        "select AccountId, Amount from Opportunity where AccountId in {ids}",
-        ids=ids,
-    )
-    fetch_results = salesforce.bulk.Opportunity.query(query, lazy_operation=True)
-
-    for batch in fetch_results:
-        for record in batch:
-            accounts_revenue[record["AccountId"]]["Revenue"] += record["Amount"]
-
-    return accounts_revenue
-
-
-def create_report_with_sql(accounts):
+def get_report_data(accounts):
     ids = [x["id"] for x in accounts]
     query = format_soql(
         "select Id, Name from Account where id in {ids}",
@@ -97,15 +71,12 @@ def create_csv(report_data, output_file):
 
 
 def main():
-    accounts = create_accounts(5)
+    accounts = create_accounts(random.randint(10, 11))
     for account in accounts:
-        create_opportunities(account, 2)
+        create_opportunities(account, random.randint(0, 5))
 
-    report_data = create_report(accounts)
-    create_csv(report_data, "manual.csv")
-
-    report_data = create_report_with_sql(accounts)
-    create_csv(report_data, "auto.csv")
+    report_data = get_report_data(accounts)
+    create_csv(report_data, "report.csv")
 
 
 if __name__ == "__main__":
