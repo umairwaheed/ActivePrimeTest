@@ -40,10 +40,9 @@ def get_report_data(accounts):
         "select Id, Name from Account where id in {ids}",
         ids=ids,
     )
-    account_data = salesforce.bulk.Account.query(query, lazy_operation=True)
 
     accounts_revenue = defaultdict(lambda: {"Name": "", "Revenue": 0})
-    for batch in account_data:
+    for batch in salesforce.bulk.Account.query(query, lazy_operation=True):
         for account in batch:
             accounts_revenue[account["Id"]]["Name"] = account["Name"]
 
